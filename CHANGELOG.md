@@ -14,6 +14,7 @@ All notable changes to Shop are documented here.
 - **PayPal Checkout capture amount verification (V3)** — The amount and currency actually captured by PayPal are now compared against the expected payment before delivery; mismatching captures are rejected.
 - **Mollie subscription webhook operator precedence (V4)** — Fixed an operator precedence bug (`??` bound tighter than `===`) that caused the subscription branch of the Mollie webhook to be evaluated incorrectly.
 - **PayPal Checkout config key naming (V5)** — Unified the gateway configuration key `client-id` to `client_id` for naming consistency; a migration renames the key in existing gateways.
+- **PayPal webhook verification return type** — Fixed a `TypeError` in `verifyPayPalWebhook()`, which returned an HTTP error response from a method typed to return a `string`. The method now returns `string|JsonResponse` and the error response is relayed by `notification()`.
 
 ### Correctifs
 
@@ -23,5 +24,6 @@ All notable changes to Shop are documented here.
 - **Vérification du montant capturé PayPal Checkout (V3)** — Le montant et la devise réellement capturés par PayPal sont désormais comparés au paiement attendu avant la livraison ; les captures incohérentes sont rejetées.
 - **Précédence d'opérateur dans le webhook d'abonnement Mollie (V4)** — Correction d'une erreur de précédence d'opérateur (`??` prioritaire sur `===`) qui faisait évaluer de travers la branche abonnement du webhook Mollie.
 - **Nommage des clés de configuration PayPal Checkout (V5)** — Uniformisation de la clé de configuration `client-id` en `client_id` par cohérence ; une migration renomme la clé dans les passerelles existantes.
+- **Type de retour de la vérification du webhook PayPal** — Correction d'un `TypeError` dans `verifyPayPalWebhook()`, qui renvoyait une réponse HTTP d'erreur depuis une méthode typée pour renvoyer une `string`. La méthode renvoie désormais `string|JsonResponse` et la réponse d'erreur est relayée par `notification()`.
 
 ---

@@ -60,4 +60,12 @@ Internal log of issues found and fixed, with prevention rules.
 **Fix:** Unified `client-id` to `client_id` in the method, validation rules and admin view. Migration `2026_05_21_100000_rename_paypal_checkout_client_id_key` renames the key in existing gateways.
 **Prevention:** Keep a single, consistent naming convention for all configuration keys.
 
+## [2026-05-21] — TypeError in PayPal webhook verification
+
+**Context:** Re-audit of `PayPalCheckoutMethod::verifyPayPalWebhook()` after the upstream commit `010ce59`.
+**Error:** The method is typed `: string` but returns `response()->json(...)` on invalid JSON and on a failed signature check, causing a `TypeError` at runtime whenever a webhook fails verification.
+**Root cause:** Upstream replaced `abort()` (which throws and never returns) with `return response()->json(...)` without widening the declared return type.
+**Fix:** Changed the return type to `string|JsonResponse`; `notification()` relays the response when verification fails, otherwise uses the returned event type.
+**Prevention:** When changing a control-flow statement from `abort()`/`throw` to `return`, update the method return type accordingly.
+
 ---

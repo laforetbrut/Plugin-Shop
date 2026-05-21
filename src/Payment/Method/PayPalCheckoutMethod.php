@@ -10,6 +10,7 @@ use Azuriom\Plugin\Shop\Models\Subscription;
 use Azuriom\Plugin\Shop\Payment\PaymentMethod;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -141,6 +142,10 @@ class PayPalCheckoutMethod extends PaymentMethod
         }
 
         $type = $this->verifyPayPalWebhook($request);
+
+        if ($type instanceof JsonResponse) {
+            return $type;
+        }
 
         if ($type === 'BILLING.SUBSCRIPTION.ACTIVATED') {
             [$userId, $packageId] = explode('|', $request->json('resource.custom_id'));
@@ -407,7 +412,7 @@ class PayPalCheckoutMethod extends PaymentMethod
     /**
      * Verify the PayPal webhook request.
      */
-    protected function verifyPayPalWebhook(Request $request): string
+    protected function verifyPayPalWebhook(Request $request): string|JsonResponse
     {
         try {
             // Avoid using $request->json() as it might change slightly encoding

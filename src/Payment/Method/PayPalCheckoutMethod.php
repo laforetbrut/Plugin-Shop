@@ -93,7 +93,7 @@ class PayPalCheckoutMethod extends PaymentMethod
 
         return view('shop::gateways.paypal-checkout', [
             'sandbox' => $this->gateway->data['environment'] === 'sandbox',
-            'clientId' => $this->gateway->data['client-id'],
+            'clientId' => $this->gateway->data['client_id'],
             'paypalId' => $id,
             'payment' => $payment,
             'description' => $this->getPurchaseDescription($payment),
@@ -223,7 +223,14 @@ class PayPalCheckoutMethod extends PaymentMethod
 
         if ($status === 'COMPLETED' && $response->json('purchase_units.0.payments.captures.0.status') === 'COMPLETED') {
             $payment = Payment::firstWhere('transaction_id', $paymentId);
-            $transactionId = $response->json('purchase_units.0.payments.captures.0.id');
+            $capture = $response->json('purchase_units.0.payments.captures.0');
+            $transactionId = $capture['id'];
+
+            if ($payment !== null && ! $this->isCapturedAmountValid($payment, $capture['amount'] ?? [])) {
+                logger()->warning("[Shop] PayPal capture amount mismatch for payment #{$payment->id}", $capture['amount'] ?? []);
+
+                return $this->invalidPayment($payment, $transactionId, 'PayPal capture amount mismatch');
+            }
 
             $payment->update(['transaction_id' => $transactionId]);
 
@@ -231,6 +238,22 @@ class PayPalCheckoutMethod extends PaymentMethod
         }
 
         return response()->json($response->json());
+    }
+
+    /**
+     * Ensure the amount and currency actually captured by PayPal match the expected payment.
+     */
+    protected function isCapturedAmountValid(Payment $payment, array $amount): bool
+    {
+        $value = $amount['value'] ?? null;
+        $currency = $amount['currency_code'] ?? null;
+
+        if ($value === null || $currency === null) {
+            return false;
+        }
+
+        return $currency === $payment->currency
+            && number_format((float) $value, 2, '.', '') === number_format($payment->price, 2, '.', '');
     }
 
     /**
@@ -374,7 +397,7 @@ class PayPalCheckoutMethod extends PaymentMethod
     public function rules(): array
     {
         return [
-            'client-id' => ['required', 'string'],
+            'client_id' => ['required', 'string'],
             'secret' => ['required', 'string'],
             'webhook_id' => ['required', 'string'],
             'environment' => ['required', 'in:live,sandbox'],
@@ -420,7 +443,7 @@ class PayPalCheckoutMethod extends PaymentMethod
      */
     protected function generateAccessToken(): string
     {
-        $username = $this->gateway->data['client-id'];
+        $username = $this->gateway->data['client_id'];
         $password = $this->gateway->data['secret'];
 
         return $this->getBaseClient()
@@ -434,7 +457,7 @@ class PayPalCheckoutMethod extends PaymentMethod
 
     private function getClient(bool $throw = true): PendingRequest
     {
-        $clientId = $this->gateway->data['client-id'];
+        $clientId = $this->gateway->data['client_id'];
         $secret = $this->gateway->data['secret'];
 
         $token = Cache::remember(

@@ -1,9 +1,9 @@
 <div class="row gx-3">
     <div class="mb-3 col-md-6">
         <label class="form-label" for="keyInput">{{ trans('shop::admin.gateways.client-id') }}</label>
-        <input type="text" class="form-control @error('client-id') is-invalid @enderror" id="keyInput" name="client-id" value="{{ old('client-id', $gateway->data['client-id'] ?? '') }}" required>
+        <input type="text" class="form-control @error('client_id') is-invalid @enderror" id="keyInput" name="client_id" value="{{ old('client_id', $gateway->data['client_id'] ?? '') }}" required>
 
-        @error('client-id')
+        @error('client_id')
         <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
         @enderror
     </div>

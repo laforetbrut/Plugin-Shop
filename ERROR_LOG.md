@@ -28,4 +28,36 @@ Internal log of issues found and fixed, with prevention rules.
 **Fix:** No code change. Mitigation is configuration-only: keep `shop.guest_purchases` disabled unless strictly required.
 **Prevention:** Review the implications of `shop.guest_purchases` before enabling it; if needed, add an e-mail/token verification step before binding an existing username.
 
+## [2026-05-21] — Package files stored on a web-accessible disk (V2)
+
+**Context:** Security re-audit of `ManageFiles::storeFile()` and the package download flow.
+**Error:** `filesDisk()` returned `Storage::disk()` (the default `public` disk, mapped to `public/storage`). The purchase check in `PackageController::downloadFile()` could be bypassed by requesting the file directly at `/storage/shop/packages/<name>`.
+**Root cause:** Downloadable files were stored on a web-accessible disk instead of a private one.
+**Fix:** `filesDisk()` now returns `Storage::disk('local')` (private, outside the webroot). Migration `2026_05_21_000000_move_shop_package_files_to_private_disk` moves existing files.
+**Prevention:** Files gated by an access check must be stored on a non-public disk and served only through the controller that enforces the check.
+
+## [2026-05-21] — PayPal capture amount not re-verified (V3)
+
+**Context:** Security re-audit of `PayPalCheckoutMethod::capturePayPalOrder()`.
+**Error:** The capture handler checked the `COMPLETED` status but never compared the captured `amount.value` / `currency_code` with `$payment->price` / `$payment->currency`.
+**Root cause:** Missing amount and currency verification in the payment capture logic.
+**Fix:** Added `isCapturedAmountValid()`; a capture whose amount or currency differs from the expected payment is rejected via `invalidPayment()`.
+**Prevention:** Always re-verify the amount and currency reported by the payment provider against the local payment before delivering an order.
+
+## [2026-05-21] — Operator precedence bug in Mollie webhook (V4)
+
+**Context:** Security re-audit of `MollieMethod::notification()`.
+**Error:** `$molliePayment->metadata?->mode ?? '' === 'subscription_first'` — `??` binds tighter than `===`, so the expression evaluated as `$mode ?? ('' === 'subscription_first')`.
+**Root cause:** Missing parentheses around the null-coalescing expression.
+**Fix:** Parenthesized: `(($molliePayment->metadata?->mode ?? '') === 'subscription_first')`.
+**Prevention:** Always parenthesize `??` when combined with comparison operators.
+
+## [2026-05-21] — Inconsistent PayPal gateway config keys (V5)
+
+**Context:** Security re-audit of `PayPalCheckoutMethod` configuration handling.
+**Error:** Gateway config keys mixed separators (`client-id` with a hyphen, `webhook_id` with an underscore), making a wrong key name easy to introduce and silently break webhook verification.
+**Root cause:** Inconsistent naming convention for gateway configuration keys.
+**Fix:** Unified `client-id` to `client_id` in the method, validation rules and admin view. Migration `2026_05_21_100000_rename_paypal_checkout_client_id_key` renames the key in existing gateways.
+**Prevention:** Keep a single, consistent naming convention for all configuration keys.
+
 ---

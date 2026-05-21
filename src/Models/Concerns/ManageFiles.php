@@ -68,6 +68,8 @@ trait ManageFiles
 
     protected function filesDisk(): Filesystem
     {
-        return Storage::disk();
+        // Package files must never be web-accessible: they are served only
+        // through the purchase-gated download controller.
+        return Storage::disk('local');
     }
 }

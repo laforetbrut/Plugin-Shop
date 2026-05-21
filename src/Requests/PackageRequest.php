@@ -54,7 +54,7 @@ class PackageRequest extends FormRequest
             'required_roles' => ['sometimes', 'nullable', 'array'],
             'commands' => ['sometimes', 'nullable', 'array'],
             'files' => ['sometimes', 'nullable', 'array'],
-            'file' => ['nullable', 'file'],
+            'file' => ['nullable', 'file', 'mimes:zip,rar,7z,jar,txt,pdf', 'max:51200'],
             'role_id' => ['nullable', 'integer', 'exists:roles,id'],
             'expired_role_id' => ['nullable', 'integer', 'exists:roles,id'],
             'variables' => ['sometimes', 'nullable', 'array'],
@@ -63,7 +63,7 @@ class PackageRequest extends FormRequest
             'custom_price' => ['filled', 'boolean'],
             'is_enabled' => ['filled', 'boolean'],
             'has_quantity' => ['filled', 'boolean'],
-            'image' => ['nullable', 'image:allow_svg'],
+            'image' => ['nullable', 'image'],
         ];
     }
 

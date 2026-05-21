@@ -5,6 +5,7 @@ namespace Azuriom\Plugin\Shop\Models\Concerns;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 trait ManageFiles
 {
@@ -28,7 +29,7 @@ trait ManageFiles
 
     public function storeFile(UploadedFile $file, bool $save = false): string
     {
-        $fileName = $file->getClientOriginalName();
+        $fileName = $this->sanitizeFileName($file->getClientOriginalName());
         $path = basename($this->filesDisk()->putFile($this->filesBasePath(), $file));
 
         $this->files = array_merge($this->files ?? [], [$path => $fileName]);
@@ -71,5 +72,19 @@ trait ManageFiles
         // Package files must never be web-accessible: they are served only
         // through the purchase-gated download controller.
         return Storage::disk('local');
+    }
+
+    /**
+     * Sanitize a client-provided file name before storing it as a label.
+     */
+    protected function sanitizeFileName(string $name): string
+    {
+        // Normalize to ASCII (also strips RTL-override spoofing characters)
+        // and remove control characters to keep a safe, readable label.
+        $name = Str::ascii($name);
+        $name = preg_replace('/[\x00-\x1F\x7F]/', '', $name) ?? '';
+        $name = trim($name);
+
+        return Str::limit($name !== '' ? $name : 'file', 255, '');
     }
 }

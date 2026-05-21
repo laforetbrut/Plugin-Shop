@@ -12,28 +12,20 @@ return new class extends Migration
     private const BASE_PATH = 'shop/packages';
 
     /**
-     * Move existing package files from the web-accessible default disk
+     * Move existing package files from the web-accessible "public" disk
      * to the private "local" disk.
      */
     public function up(): void
     {
-        if (config('filesystems.default') === 'local') {
-            return; // Files are already stored on the private disk.
-        }
-
-        $this->moveFiles(Storage::disk(), Storage::disk('local'));
+        $this->moveFiles(Storage::disk('public'), Storage::disk('local'));
     }
 
     /**
-     * Reverse the migration: move the files back to the default disk.
+     * Reverse the migration: move the files back to the "public" disk.
      */
     public function down(): void
     {
-        if (config('filesystems.default') === 'local') {
-            return;
-        }
-
-        $this->moveFiles(Storage::disk('local'), Storage::disk());
+        $this->moveFiles(Storage::disk('local'), Storage::disk('public'));
     }
 
     private function moveFiles(Filesystem $from, Filesystem $to): void

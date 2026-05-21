@@ -68,4 +68,20 @@ Internal log of issues found and fixed, with prevention rules.
 **Fix:** Changed the return type to `string|JsonResponse`; `notification()` relays the response when verification fails, otherwise uses the returned event type.
 **Prevention:** When changing a control-flow statement from `abort()`/`throw` to `return`, update the method return type accordingly.
 
+## [2026-05-21] — Package file migration skipped on local default disk (F1)
+
+**Context:** Re-audit of migration `2026_05_21_000000_move_shop_package_files_to_private_disk`.
+**Error:** `up()` returned early when `config('filesystems.default') === 'local'` and used `Storage::disk()` (the default disk) instead of explicitly targeting the web-accessible `public` disk. Existing files left on the `public` disk would never be relocated.
+**Root cause:** The migration relied on the default disk name instead of targeting the disk where the vulnerable code actually stored files.
+**Fix:** `up()` now moves files explicitly from `public` to `local` (and `down()` the reverse), with no guard on `filesystems.default`.
+**Prevention:** A data migration must target the concrete source/destination explicitly, not infer it from environment-dependent defaults.
+
+## [2026-05-21] — Upload file name stored without sanitization (F2)
+
+**Context:** Re-audit of `ManageFiles::storeFile()`.
+**Error:** The client-provided `getClientOriginalName()` was stored verbatim as the file label, keeping control characters and non-ASCII spoofing characters (e.g. RTL override).
+**Root cause:** Missing sanitization of the client-controlled file name.
+**Fix:** Added `sanitizeFileName()` — `Str::ascii()` normalization, control-character removal and a 255-character cap — applied in `storeFile()`.
+**Prevention:** Always sanitize client-provided names before persisting them, even when downstream output is escaped.
+
 ---

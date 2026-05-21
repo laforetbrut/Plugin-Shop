@@ -15,6 +15,8 @@ All notable changes to Shop are documented here.
 - **Mollie subscription webhook operator precedence (V4)** — Fixed an operator precedence bug (`??` bound tighter than `===`) that caused the subscription branch of the Mollie webhook to be evaluated incorrectly.
 - **PayPal Checkout config key naming (V5)** — Unified the gateway configuration key `client-id` to `client_id` for naming consistency; a migration renames the key in existing gateways.
 - **PayPal webhook verification return type** — Fixed a `TypeError` in `verifyPayPalWebhook()`, which returned an HTTP error response from a method typed to return a `string`. The method now returns `string|JsonResponse` and the error response is relayed by `notification()`.
+- **Package file migration disk targeting (F1)** — The migration that relocates existing package files now explicitly moves them between the `public` and `local` disks, removing a guard that skipped it when the default disk was already `local`.
+- **Upload file name sanitization (F2)** — Client-provided file names are now sanitized before being stored as a label: ASCII normalization, control-character removal and a 255-character length cap.
 
 ### Correctifs
 
@@ -25,5 +27,7 @@ All notable changes to Shop are documented here.
 - **Précédence d'opérateur dans le webhook d'abonnement Mollie (V4)** — Correction d'une erreur de précédence d'opérateur (`??` prioritaire sur `===`) qui faisait évaluer de travers la branche abonnement du webhook Mollie.
 - **Nommage des clés de configuration PayPal Checkout (V5)** — Uniformisation de la clé de configuration `client-id` en `client_id` par cohérence ; une migration renomme la clé dans les passerelles existantes.
 - **Type de retour de la vérification du webhook PayPal** — Correction d'un `TypeError` dans `verifyPayPalWebhook()`, qui renvoyait une réponse HTTP d'erreur depuis une méthode typée pour renvoyer une `string`. La méthode renvoie désormais `string|JsonResponse` et la réponse d'erreur est relayée par `notification()`.
+- **Ciblage du disque dans la migration des fichiers de package (F1)** — La migration qui déplace les fichiers de package existants cible désormais explicitement les disques `public` et `local`, supprimant une garde qui l'empêchait de s'exécuter lorsque le disque par défaut était déjà `local`.
+- **Assainissement du nom de fichier uploadé (F2)** — Les noms de fichiers fournis par le client sont désormais assainis avant d'être stockés comme libellé : normalisation ASCII, suppression des caractères de contrôle et troncature à 255 caractères.
 
 ---
